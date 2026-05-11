@@ -1,5 +1,6 @@
 import pygame
 from szomszed import Szomszed
+from palya import Palya
 import time
 class  Jatek():
     def __init__(self, palya, Ablak_meret,Palya_meret,aknak,cella):
@@ -12,21 +13,44 @@ class  Jatek():
         self.ures = [[ 0 for i in range(Palya_meret[1])]for j in range(Palya_meret[0])]
         self.vesztett = False
         self.starttime = time.time()
+        self.current_time = time.time() - self.starttime
+        self.button_rect = pygame.Rect(
+            self.Ablak_meret[0]-250,
+            self.Ablak_meret[1] - 70,
+            180,
+            50
+        )
+
     def fut(self):
+        self.ablak = pygame.display.set_mode(self.Ablak_meret)
         pygame.init()
-        pygame.display.set_mode(self.Ablak_meret)
         fut = True
         while fut:
-            if self.vesztett == True or self.nyertel_e() == True:
+            if self.vesztett or self.nyertel_e():
                 self.current_time = self.current_time
             else:
                 self.current_time = time.time() - self.starttime
             for event in pygame.event.get():
                 if (event.type == pygame.QUIT):
+                    if not self.vesztett or not self.nyertel_e():
+                        with open("save.txt", "w") as s:
+                            for sor in self.palya:
+                                s.write(" ".join(map(str, sor)) + "\n")
+
+                        with open("cover.txt", "w") as g:
+                            for sor in self.ures:
+                                g.write(" ".join(map(str, sor)) + "\n")
+                        g.close()
+                        s.close()
                     fut = False
-                    
+
+
                 if (event.type == pygame.MOUSEBUTTONDOWN):
                     self.poz = self.eger_poz()
+                    if self.button_rect.collidepoint(event.pos):
+                        self.palya = Palya(self.Palya_meret,self.aknak).tabla
+                        self.volt = []
+                        self.ures = [[ 0 for i in range(self.Palya_meret[1])]for j in range(self.Palya_meret[0])]
                     if self.poz[0] < self.Palya_meret[0] and self.poz[1] < self.Palya_meret[1]:
                         if event.button == 1 and self.ures[self.poz[0]][self.poz[1]] == 0:
                             self.ures[self.poz[0]][self.poz[1]] =1
@@ -46,20 +70,25 @@ class  Jatek():
         pygame.quit()
     
     def kirajz(self):
-        ablak = pygame.display.set_mode((self.Ablak_meret))
+        ablak = self.ablak
+        ablak.fill("black")
         betu= pygame.font.SysFont('Arial',20)
         ido_betu = pygame.font.SysFont('Arial',40)
         vege_betu = pygame.font.SysFont('Arial',70)
-        ablak.fill('black')
+        
         
         #ido_kiir
-        f = open('best_time','r')
+        f = open('best_time.txt','r')
         best = f.readline()
         ido = ido_betu.render(f'Idő: {round(self.current_time)}',1,'white')
         ablak.blit(ido, (0,self.Ablak_meret[1] - ido.get_height()))
         best_ido = ido_betu.render(f'legjobb idő: {best}',1,'white')
         ablak.blit(best_ido, (0,self.Ablak_meret[1] - ido.get_height()*2))
 
+        pygame.draw.rect(ablak, 'blue',self.button_rect)
+        text = betu.render("Uj jatek", True, (255, 255, 255))
+        text_rect = text.get_rect(center=self.button_rect.center)
+        ablak.blit(text, text_rect)
         if self.vesztett == True:
             szo = vege_betu.render('Vesztettél!',1,'white')
             ablak.blit(szo,(self.Ablak_meret[0]/2-szo.get_width()/2,self.Ablak_meret[0]/2))
@@ -67,9 +96,8 @@ class  Jatek():
 
         if self.nyertel_e() == True:
             if int(best) > round(self.current_time) or int(best) == 0:
-                f = open('best_time','w')
+                f = open('best_time.txt','w')
                 f.write(str(round(self.current_time)))
-            f.close()
             szo = vege_betu.render('Nyertél!',1,'white')
             ablak.blit(szo,(self.Ablak_meret[0]/2-szo.get_width()/2,self.Ablak_meret[0]/2))
             f.close()
@@ -127,5 +155,3 @@ class  Jatek():
         if felfedett == self.Palya_meret[0]*self.Palya_meret[1]-self.aknak:
             return True
         return False
-        
-        
