@@ -22,26 +22,28 @@ class  Jatek():
         )
 
     def fut(self):
+        f = open('best_time.txt','r')
+        sor = f.readline().strip().split()
+        self.best = sor[0]
+
+        f.close()
         self.ablak = pygame.display.set_mode(self.Ablak_meret)
         pygame.init()
         fut = True
         while fut:
-            if self.vesztett or self.nyertel_e():
-                self.current_time = self.current_time
-            else:
-                self.current_time = time.time() - self.starttime
-            for event in pygame.event.get():
-                if (event.type == pygame.QUIT):
-                    if not self.vesztett or not self.nyertel_e():
-                        with open("save.txt", "w") as s:
-                            for sor in self.palya:
-                                s.write(" ".join(map(str, sor)) + "\n")
 
-                        with open("cover.txt", "w") as g:
-                            for sor in self.ures:
-                                g.write(" ".join(map(str, sor)) + "\n")
-                        g.close()
-                        s.close()
+            self.current_time = time.time() - self.starttime + float(sor[1])
+            for event in pygame.event.get():
+                if (event.type == pygame.QUIT) and (not self.vesztett or not self.nyertel_e()):
+                    with open("save.txt", "w") as s:
+                        for sor in self.palya:
+                            s.write(" ".join(map(str, sor)) + "\n")
+
+                    with open("cover.txt", "w") as g:
+                        for sor in self.ures:
+                            g.write(" ".join(map(str, sor)) + "\n")
+                    with open("best_time.txt", "w") as t:
+                        t.write(" ".join([self.best, str(round(self.current_time))]))
                     fut = False
 
 
@@ -51,6 +53,11 @@ class  Jatek():
                         self.palya = Palya(self.Palya_meret,self.aknak).tabla
                         self.volt = []
                         self.ures = [[ 0 for i in range(self.Palya_meret[1])]for j in range(self.Palya_meret[0])]
+                        self.vesztett = False
+                        self.starttime = time.time()
+                        self.current_time = time.time() - self.starttime
+                        sor[1] = 0
+
                     if self.poz[0] < self.Palya_meret[0] and self.poz[1] < self.Palya_meret[1]:
                         if event.button == 1 and self.ures[self.poz[0]][self.poz[1]] == 0:
                             self.ures[self.poz[0]][self.poz[1]] =1
@@ -78,26 +85,30 @@ class  Jatek():
         
         
         #ido_kiir
-        f = open('best_time.txt','r')
-        best = f.readline()
         ido = ido_betu.render(f'Idő: {round(self.current_time)}',1,'white')
         ablak.blit(ido, (0,self.Ablak_meret[1] - ido.get_height()))
-        best_ido = ido_betu.render(f'legjobb idő: {best}',1,'white')
+        best_ido = ido_betu.render(f'legjobb idő: {self.best}',1,'white')
         ablak.blit(best_ido, (0,self.Ablak_meret[1] - ido.get_height()*2))
 
         pygame.draw.rect(ablak, 'blue',self.button_rect)
         text = betu.render("Uj jatek", True, (255, 255, 255))
         text_rect = text.get_rect(center=self.button_rect.center)
         ablak.blit(text, text_rect)
-        if self.vesztett == True:
+        if self.vesztett:
+            f = open('best_time.txt','w')
+            f.write(" ".join([self.best, "0"]))
             szo = vege_betu.render('Vesztettél!',1,'white')
             ablak.blit(szo,(self.Ablak_meret[0]/2-szo.get_width()/2,self.Ablak_meret[0]/2))
+            f.close()
             return
 
-        if self.nyertel_e() == True:
-            if int(best) > round(self.current_time) or int(best) == 0:
-                f = open('best_time.txt','w')
-                f.write(str(round(self.current_time)))
+        if self.nyertel_e():
+            f = open('best_time.txt','w')
+            if int(self.best) > round(self.current_time) or int(self.best) == 0:
+                f.write(" ".join([str(round(self.current_time)), "0"]))
+                self.best = str(round(self.current_time))
+            else:
+                f.write(" ".join([self.best, "0"]))
             szo = vege_betu.render('Nyertél!',1,'white')
             ablak.blit(szo,(self.Ablak_meret[0]/2-szo.get_width()/2,self.Ablak_meret[0]/2))
             f.close()

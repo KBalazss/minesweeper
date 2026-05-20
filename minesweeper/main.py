@@ -24,12 +24,11 @@ else:
         for sor in f:
             palya.append(list(map(int, sor.strip().split())))
     akna = sum(sor.count(-1) for sor in palya)
-    print(akna)
+
+
     mag = len(palya)
     szel = len(palya[0])
     Palya_meret = (mag ,szel)
-    # TODO akna
-    akna = 5
     if szel > mag:
         cella = szel
     else:
